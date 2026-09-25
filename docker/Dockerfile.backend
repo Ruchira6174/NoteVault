@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY backend/requirements.txt .
+# TODO: Install dependencies
+# RUN pip install -r requirements.txt
+
+COPY backend/ .
+# TODO: Expose port and run uvicorn

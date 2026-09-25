@@ -1,0 +1,8 @@
+FROM node:20-alpine
+
+WORKDIR /app
+COPY frontend/package*.json ./
+# TODO: npm install
+
+COPY frontend/ .
+# TODO: Build Next.js and run
