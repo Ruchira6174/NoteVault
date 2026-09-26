@@ -2,8 +2,15 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 from app.core.constants import TransactionType
+
+
+class WithdrawRequest(BaseModel):
+    amount: Decimal = Field(..., gt=0)
+    upi_id: str = Field(..., min_length=5, max_length=100)
+
 
 class WalletResponse(BaseModel):
     id: uuid.UUID
@@ -15,6 +22,7 @@ class WalletResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class TransactionResponse(BaseModel):
     id: uuid.UUID
@@ -29,10 +37,11 @@ class TransactionResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class EarningsSummary(BaseModel):
     total_earned: Decimal
     this_month_earned: Decimal
     available_balance: Decimal
     pending_clearance: Decimal
-    
+
     model_config = ConfigDict(from_attributes=True)
