@@ -1,28 +1,61 @@
 import uuid
 from typing import Optional
 from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
+
+# ---------- Register ----------
+
 class UserRegister(BaseModel):
-    email: EmailStr = Field(..., description="User's email address")
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
-    password: str = Field(..., min_length=8, description="Strong password, min 8 characters")
+    full_name: str = Field(..., min_length=2, max_length=100)
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+
+    college: str = Field(..., max_length=150)
+    branch: str = Field(..., max_length=100)
+    semester: int = Field(..., ge=1, le=8)
+
+    bio: Optional[str] = None
+
+
+# ---------- Login ----------
 
 class UserLogin(BaseModel):
-    email_or_username: str = Field(..., description="Email or username for login")
-    password: str = Field(..., description="User password")
+    email_or_username: str
+    password: str
+
+
+# ---------- Token ----------
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+
+# ---------- User Response ----------
+
 class UserResponse(BaseModel):
     id: uuid.UUID
-    email: EmailStr
+    full_name: str
     username: str
-    is_active: bool
+    email: EmailStr
+
+    college: str
+    branch: str
+    semester: int
+    bio: Optional[str]
+
     is_verified: bool
     created_at: datetime
-    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ---------- Register Response ----------
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

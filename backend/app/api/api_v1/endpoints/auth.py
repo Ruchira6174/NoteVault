@@ -1,21 +1,21 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse
+from app.schemas.auth import UserRegister as UserCreate, UserLogin, TokenResponse, UserResponse
 from app.services.auth_service import AuthService
 from app.dependencies.auth import get_current_active_user
 from app.models.user import User
 from pydantic import BaseModel
 
-class RegisterResponse(BaseModel):
+class AuthResponse(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
     user: UserResponse
 
 router = APIRouter()
 
-@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_in: UserRegister, db: Session = Depends(get_db)):
+@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+async def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """Create account and return access token + user."""
     return AuthService.register_user(db, user_in)
 
