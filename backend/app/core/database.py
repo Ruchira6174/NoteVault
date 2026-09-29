@@ -1,27 +1,36 @@
 from collections.abc import Generator
+
+# pyrefly: ignore [missing-import]
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+# pyrefly: ignore [missing-import]
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
 from app.core.config import get_settings
 
 settings = get_settings()
 
-# SQLAlchemy 2.0 style engine with connection pooling
+# Database Engine
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,  # Enable connection health checks
-    pool_size=10,        # Number of connections to keep open
-    max_overflow=20      # Max additional connections to create
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Session Factory
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    autocommit=False,
+)
 
-Base = declarative_base()
+# Base class for all SQLAlchemy models
+class Base(DeclarativeBase):
+    pass
 
+
+# FastAPI Dependency
 def get_db() -> Generator[Session, None, None]:
-    """
-    Database dependency for FastAPI routes.
-    Yields a database session and ensures it is closed after the request.
-    """
     db = SessionLocal()
     try:
         yield db

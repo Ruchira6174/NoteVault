@@ -1,4 +1,6 @@
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, status
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -7,6 +9,7 @@ from app.dependencies.auth import get_current_active_user
 from app.models.user import User
 from app.schemas.resource import ResourceCreate, ResourceUpdate, ResourceResponse
 from app.services.resource_service import ResourceService
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
 router = APIRouter()

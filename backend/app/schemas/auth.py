@@ -2,6 +2,7 @@ import uuid
 from typing import Optional
 from datetime import datetime
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 

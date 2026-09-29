@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Points to the backend folder

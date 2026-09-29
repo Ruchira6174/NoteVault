@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.api import deps
 from app.schemas.resource import ResourceCardResponse
+# pyrefly: ignore [missing-import]
 from app.services.search_service import search_resources, explore_resources, get_trending_resources, get_recommended_resources
 
 router = APIRouter()

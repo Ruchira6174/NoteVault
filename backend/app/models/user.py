@@ -2,8 +2,11 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+# pyrefly: ignore [missing-import]
 from sqlalchemy import String, Boolean, Integer, Text, DateTime
+# pyrefly: ignore [missing-import]
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
