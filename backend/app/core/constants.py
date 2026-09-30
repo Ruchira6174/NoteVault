@@ -2,14 +2,12 @@ from enum import Enum
 
 class Visibility(str, Enum):
     PRIVATE = "PRIVATE"
-    SEMI_PRIVATE = "SEMI_PRIVATE"
     PUBLIC = "PUBLIC"
+    PROTECTED = "PROTECTED"
 
 class ResourceStatus(str, Enum):
     PENDING = "PENDING"
-    PROCESSING = "PROCESSING"
-    ACTIVE = "ACTIVE"
-    REJECTED = "REJECTED"
+    PUBLISHED = "PUBLISHED"
 
 class AccessRequestStatus(str, Enum):
     PENDING = "PENDING"

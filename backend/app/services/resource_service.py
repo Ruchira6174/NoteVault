@@ -1,15 +1,15 @@
-from fastapi import HTTPException
+import uuid
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from uuid import UUID
-from decimal import Decimal
 from typing import List
+
 from app.models.resource import Resource
 from app.schemas.resource import ResourceCreate, ResourceUpdate
 from app.core.constants import Visibility, ResourceStatus
 
 class ResourceService:
     @staticmethod
-    def create_resource(db: Session, user_id: UUID, resource_in: ResourceCreate) -> Resource:
+    def create_resource(db: Session, user_id: uuid.UUID, resource_in: ResourceCreate) -> Resource:
         db_resource = Resource(
             owner_id=user_id,
             **resource_in.model_dump(exclude_unset=True)
@@ -20,26 +20,31 @@ class ResourceService:
         return db_resource
 
     @staticmethod
-    def get_my_resources(db: Session, user_id: UUID) -> List[Resource]:
+    def get_my_resources(db: Session, user_id: uuid.UUID) -> List[Resource]:
         return db.query(Resource).filter(
-            Resource.owner_id == user_id,
-            Resource.status != ResourceStatus.DELETED
-        ).all()
+            Resource.owner_id == user_id
+        ).order_by(Resource.created_at.desc()).all()
 
     @staticmethod
-    def get_resource_by_id(db: Session, resource_id: UUID, user_id: UUID) -> Resource:
+    def get_resource_by_id(db: Session, resource_id: uuid.UUID, user_id: uuid.UUID) -> Resource:
         resource = db.query(Resource).filter(Resource.id == resource_id).first()
         if not resource:
-            raise HTTPException(status_code=404, detail="Resource not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+            
         if resource.owner_id != user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to access this resource")
-        if resource.status == ResourceStatus.DELETED:
-            raise HTTPException(status_code=404, detail="Resource not found")
+            if resource.visibility == Visibility.PRIVATE or resource.status == ResourceStatus.PENDING:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this private resource")
+                
         return resource
 
     @staticmethod
-    def update_resource(db: Session, resource_id: UUID, user_id: UUID, resource_in: ResourceUpdate) -> Resource:
-        resource = ResourceService.get_resource_by_id(db, resource_id, user_id)
+    def update_resource(db: Session, resource_id: uuid.UUID, user_id: uuid.UUID, resource_in: ResourceUpdate) -> Resource:
+        resource = db.query(Resource).filter(Resource.id == resource_id).first()
+        if not resource:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+            
+        if resource.owner_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to edit this resource")
         
         update_data = resource_in.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -50,37 +55,28 @@ class ResourceService:
         return resource
 
     @staticmethod
-    def delete_resource(db: Session, resource_id: UUID, user_id: UUID) -> dict:
-        resource = ResourceService.get_resource_by_id(db, resource_id, user_id)
-        resource.status = ResourceStatus.DELETED
-        db.commit()
-        return {"message": "Resource successfully soft deleted"}
-
-    @staticmethod
-    def publish_resource(db: Session, resource_id: UUID, user_id: UUID, publish: bool) -> Resource:
-        resource = ResourceService.get_resource_by_id(db, resource_id, user_id)
-        resource.status = ResourceStatus.PUBLISHED if publish else ResourceStatus.DRAFT
-        db.commit()
-        db.refresh(resource)
-        return resource
-
-    @staticmethod
-    def update_visibility(db: Session, resource_id: UUID, user_id: UUID, visibility: Visibility) -> Resource:
-        resource = ResourceService.get_resource_by_id(db, resource_id, user_id)
-        resource.visibility = visibility
-        db.commit()
-        db.refresh(resource)
-        return resource
-
-    @staticmethod
-    def update_price(db: Session, resource_id: UUID, user_id: UUID, is_paid: bool, price: Decimal, currency: str = "INR") -> Resource:
-        if price < 0:
-            raise HTTPException(status_code=400, detail="Price cannot be negative")
+    def delete_resource(db: Session, resource_id: uuid.UUID, user_id: uuid.UUID):
+        resource = db.query(Resource).filter(Resource.id == resource_id).first()
+        if not resource:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
             
-        resource = ResourceService.get_resource_by_id(db, resource_id, user_id)
-        resource.is_paid = is_paid
-        resource.price = price
-        resource.currency = currency
+        if resource.owner_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this resource")
+            
+        db.delete(resource)
+        db.commit()
+        return None
+
+    @staticmethod
+    def publish_resource(db: Session, resource_id: uuid.UUID, user_id: uuid.UUID, publish: bool) -> Resource:
+        resource = db.query(Resource).filter(Resource.id == resource_id).first()
+        if not resource:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+            
+        if resource.owner_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to edit this resource")
+            
+        resource.status = ResourceStatus.PUBLISHED if publish else ResourceStatus.PENDING
         db.commit()
         db.refresh(resource)
         return resource

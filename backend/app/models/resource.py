@@ -3,78 +3,145 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-# pyrefly: ignore [missing-import]
 from sqlalchemy import (
-    String,
-    Integer,
-    Float,
-    DateTime,
-    ForeignKey,
-    Text,
     Boolean,
-    Numeric,
+    DateTime,
     Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
-# pyrefly: ignore [missing-import]
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
-# pyrefly: ignore [missing-import]
+from sqlalchemy.dialects.postgresql import ARRAY, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.constants import ResourceStatus, Visibility
 from app.core.database import Base
-from app.core.constants import Visibility, ResourceStatus
+from app.models.user import User
 
 
 class Resource(Base):
     __tablename__ = "resources"
 
-    # ---------- Primary Key ----------
+    # ==============================
+    # Primary Key
+    # ==============================
+
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         index=True,
     )
 
-    # ---------- Owner ----------
+    # ==============================
+    # Ownership
+    # ==============================
+
     owner_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PG_UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    # ---------- Resource Details ----------
-    title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    description: Mapped[Optional[str]] = mapped_column(Text)
+    # ==============================
+    # Basic Resource Information
+    # ==============================
 
-    subject: Mapped[Optional[str]] = mapped_column(String(255), index=True)
-    university: Mapped[Optional[str]] = mapped_column(String(255), index=True)
-    course: Mapped[Optional[str]] = mapped_column(String(100), index=True)
-    branch: Mapped[Optional[str]] = mapped_column(String(100))
-    semester: Mapped[Optional[int]] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        index=True,
+    )
 
-    tags: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
-    # ---------- Visibility & Pricing ----------
+    subject: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+    )
+
+    university: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+    )
+
+    course: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True,
+    )
+
+    branch: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    semester: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    tags: Mapped[Optional[list[str]]] = mapped_column(
+        ARRAY(String),
+        nullable=True,
+    )
+
+    # ==============================
+    # Visibility & Pricing
+    # ==============================
+
     visibility: Mapped[Visibility] = mapped_column(
         SQLEnum(Visibility),
         default=Visibility.PRIVATE,
         index=True,
     )
 
-    is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_paid: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+    )
 
     price: Mapped[Decimal] = mapped_column(
         Numeric(10, 2),
         default=Decimal("0.00"),
     )
 
-    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    currency: Mapped[str] = mapped_column(
+        String(3),
+        default="USD",
+    )
 
-    # ---------- Analytics ----------
-    average_rating: Mapped[float] = mapped_column(Float, default=0.0)
-    downloads: Mapped[int] = mapped_column(Integer, default=0)
-    views: Mapped[int] = mapped_column(Integer, default=0)
+    # ==============================
+    # Statistics
+    # ==============================
+
+    average_rating: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+    )
+
+    downloads: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )
+
+    views: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )
+
+    # ==============================
+    # Resource Status
+    # ==============================
 
     status: Mapped[ResourceStatus] = mapped_column(
         SQLEnum(ResourceStatus),
@@ -82,7 +149,10 @@ class Resource(Base):
         index=True,
     )
 
-    # ---------- Timestamps ----------
+    # ==============================
+    # Timestamps
+    # ==============================
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -94,7 +164,10 @@ class Resource(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    # ---------- Relationships ----------
+    # ==============================
+    # Relationships
+    # ==============================
+
     owner: Mapped["User"] = relationship(
         "User",
         backref="resources",

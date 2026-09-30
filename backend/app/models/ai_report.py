@@ -1,3 +1,4 @@
+from app.models.resource import Resource
 import uuid
 from datetime import datetime, timezone
 from typing import Optional

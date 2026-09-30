@@ -1,3 +1,5 @@
+from app.models.user import User
+from app.models.resource import Resource
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
