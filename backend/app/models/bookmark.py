@@ -1,4 +1,6 @@
 import uuid
+from user import User
+from resource import Resource
 from datetime import datetime, timezone
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
